@@ -28,13 +28,16 @@ class RocketSerial(threading.Thread):
     def run(self):
         while True:
             self.mutex.acquire()
-            if self.should_stop:
-                return
-            data = self.serial.readline()
-            data = data.decode()
-            data.strip()
-            array = data.split(',')
-            if len(array) == 9 and array[0] != "0":
-                self.file.write(data)
-            self.data = array
+            try:
+                if self.should_stop:
+                    return
+                data = self.serial.readline()
+                data = data.decode()
+                data.strip()
+                array = data.split(',')
+                if len(array) == 9 and array[0] != "0":
+                    self.file.write(data)
+                self.data = array
+            except Exception:
+                self.data = []
             self.mutex.release()
