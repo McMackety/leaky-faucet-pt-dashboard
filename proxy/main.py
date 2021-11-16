@@ -1,15 +1,14 @@
 import socket
+import serial
 import threading
-import time
-import math
 
-def generateDigit(j):
-    return math.sin(j + time.time()) * 500
-testDigit = str(100)
-printout = testDigit.encode()
+port = 'COM2'
+baud = 115200
 
 bind_ip = '0.0.0.0'
 bind_port = 7997
+
+ser = serial.Serial(port, baud)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((bind_ip, bind_port))
@@ -20,10 +19,7 @@ print('Listening on {}:{}'.format(bind_ip, bind_port))
 
 def handle_client_connection(client_socket):
     while True:
-        for j in range(0, 8):
-            client_socket.send(str(abs(round(generateDigit(j), 2))).encode() + b',')
-        client_socket.send(b'\n')
-        time.sleep(0.1)
+        client_socket.send(ser.read(1024))
 
 while True:
     client_sock, address = server.accept()

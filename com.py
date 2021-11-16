@@ -1,9 +1,10 @@
-import serial
+import socket
 import threading
 import io
 
-com_port = "/dev/tty.usbmodem14401"
-baud_rate = 115200
+# com_port = "/dev/tty.usbmodem14401"
+# baud_rate = 115200
+address = "localhost"
 
 class RocketSerial(threading.Thread):
     def __init__(self):
@@ -11,7 +12,9 @@ class RocketSerial(threading.Thread):
         self.mutex = threading.Lock()
         self.should_stop = False
         self.file = io.open("log.csv", "a")
-        self.serial = serial.Serial(com_port, baud_rate, timeout=1)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((address, 7997))
+        self.socketfile = self.socket.makefile()
         threading.Thread.__init__(self)
 
     def read_data(self):
@@ -27,17 +30,16 @@ class RocketSerial(threading.Thread):
 
     def run(self):
         while True:
-            self.mutex.acquire()
             try:
                 if self.should_stop:
                     return
-                data = self.serial.readline()
-                data = data.decode()
+                data = self.socketfile.readline()
                 data.strip()
                 array = data.split(',')
                 if len(array) == 9 and array[0] != "0":
                     self.file.write(data)
+                self.mutex.acquire()
                 self.data = array
+                self.mutex.release()
             except Exception:
                 self.data = []
-            self.mutex.release()
